@@ -50,17 +50,84 @@ var apiRoutes = express.Router();
 
 // TODO: route middleware to verify a token
 
+apiRoutes.use(function(req, res, next) {
+
+  // check header or url parameters or post parameters for token
+  var token = req.body.token || req.query.token || req.headers['x-access-token'];
+
+  // decode token
+  if (token) {
+
+    // verifies secret and checks exp
+    jwt.verify(token, app.get('superSecret'), function(err, decoded) {
+      if (err) {
+        return res.json({ success: false, message: 'Failed to authenticate token.' });
+      } else {
+        // if everything is good, save to request for use in other routes
+        req.decoded = decoded;
+        next();
+      }
+    });
+
+  } else {
+
+    // if there is no token
+    // return an error
+    return res.status(403).send({
+        success: false,
+        message: 'No token provided.'
+    });
+
+  }
+});
+
 //  (GET http://localhost:8080/api/)
 apiRoutes.get('/', function(req, res) {
   res.json({ message: 'Welcome to the coolest API on Simplon!' });
 });
-
 // (GET http://localhost:8080/api/users)
 apiRoutes.get('/users', function(req, res) {
   User.find({}, function(err, users) {
     res.json(users);
   });
 });
+apiRoutes.post('/authenticate', function(req, res) {
+
+  // find the user
+  User.findOne({
+    name: req.body.name
+  }, function(err, user) {
+
+    if (err) throw err;
+
+    if (!user) {
+      res.json({ success: false, message: 'Authentification raté. User pas trouvé.' });
+    } else if (user) {
+
+      if (user.password != req.body.password) {
+        res.json({ success: false, message: 'Authentification raté. bad password.' });
+      } else {
+
+
+    const payload = {
+      admin: user.admin
+    };
+        var token = jwt.sign(payload, app.get('superSecret'), {
+          expiresIn : 60*60*24 // expires in 24 hours
+        });
+
+        res.json({
+          success: true,
+          message: 'Enjoy your token!',
+          token: token
+        });
+      }
+
+    }
+
+  });
+});
+
 
 app.use('/api', apiRoutes);
 

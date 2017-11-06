@@ -10,4 +10,8 @@ npm - S install express body-parser morgan mongoose jsonwebtoken
 
 * [x] Create a sample User
 * [x] Show user in JSON
-* [x] create Routes :+1:
+* [x] create Routes :+1: [commit](fce12cd28b031a68689d4c3fc0c735d60dd16970)
+* [x] full Routes & middleware []()
+```
+x-access-token | your token
+```
